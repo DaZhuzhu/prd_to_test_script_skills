@@ -19,6 +19,151 @@
 - pytest 层只做流程编排，业务动作和断言必须下沉到 PageObject。
 - 生成脚本后必须独立审查，再进入回归候选。
 
+## 安装方式
+
+GitHub 仓库：
+
+[DaZhuzhu/prd_to_test_script_skills](https://github.com/DaZhuzhu/prd_to_test_script_skills)
+
+本仓库包含 7 个 skill，分布在 `prd_to_case/` 和 `case_to_script/` 两个目录下。推荐优先使用 Agent 自动安装或 `npx skills add`；如果当前工具不能一次性识别多 skill 仓库，再使用手动安装方式。
+
+### 方式一：让 Agent 自动安装（推荐）
+
+在支持 Agent Skills 协议的 Agent 中直接输入：
+
+```text
+帮我安装这个仓库里的全部 skills：
+https://github.com/DaZhuzhu/prd_to_test_script_skills
+```
+
+适用场景：
+
+| Agent | 使用方式 |
+| --- | --- |
+| Claude Code | 直接在会话中发送上面的安装请求 |
+| Codex / Codex CLI | 直接在会话中发送上面的安装请求，或让 Codex 按仓库结构安装到 Codex skills 目录 |
+| Cursor | 在 Agent 对话中发送上面的安装请求 |
+| 其他支持 Agent Skills 的工具 | 让 Agent 读取 GitHub 仓库，并安装其中 7 个 skill 目录 |
+
+如果 Agent 只安装了 README 所在目录，而没有安装 7 个具体 skill，请改用“方式三：手动安装”。
+
+### 方式二：使用 skills CLI
+
+如果你的环境支持 `skills` CLI，可以尝试：
+
+```bash
+npx skills add DaZhuzhu/prd_to_test_script_skills
+```
+
+如果需要指定目标 Agent，可按当前 CLI 支持的 agent 名称添加 `-a` 参数，例如：
+
+```bash
+npx skills add DaZhuzhu/prd_to_test_script_skills -a claude-code
+npx skills add DaZhuzhu/prd_to_test_script_skills -a codex
+npx skills add DaZhuzhu/prd_to_test_script_skills -a cursor
+```
+
+注意：
+
+- 不同版本的 `skills` CLI 支持的 `-a` 名称可能不同，请以 `npx skills add --help` 的输出为准。
+- 如果 CLI 对多 skill 仓库支持不完整，没有安装全部 7 个 skill，请使用手动安装方式。
+
+### 方式三：手动安装（最稳兜底）
+
+将仓库克隆到本地：
+
+```bash
+git clone https://github.com/DaZhuzhu/prd_to_test_script_skills.git
+cd prd_to_test_script_skills
+```
+
+选择你的 Agent skills 目录：
+
+| Agent / Runtime | 默认 skills 目录 |
+| --- | --- |
+| Claude Code | `~/.claude/skills` |
+| Codex / Codex CLI | `~/.codex/skills` |
+| Cursor | `~/.cursor/skills` |
+| 其他 Agent | 使用该 Agent 文档中声明的 skills 目录 |
+
+下面用 `SKILLS_DIR` 代表你的目标目录。
+
+```bash
+export SKILLS_DIR="$HOME/.claude/skills"
+mkdir -p "$SKILLS_DIR"
+```
+
+如果你使用的是 Codex，可改为：
+
+```bash
+export SKILLS_DIR="$HOME/.codex/skills"
+mkdir -p "$SKILLS_DIR"
+```
+
+如果你使用的是 Cursor，可改为：
+
+```bash
+export SKILLS_DIR="$HOME/.cursor/skills"
+mkdir -p "$SKILLS_DIR"
+```
+
+复制全部 7 个 skill：
+
+```bash
+cp -R prd_to_case/autotest-check-prd \
+      prd_to_case/autotest-summary-prd \
+      prd_to_case/autotest-generate-cases \
+      case_to_script/autotest-check-case \
+      case_to_script/autotest-summary-case \
+      case_to_script/autotest-generate-script \
+      case_to_script/autotest-review-script \
+      "$SKILLS_DIR"/
+```
+
+安装后建议重启对应 Agent 或开启新会话，让 skill 列表重新加载。
+
+### 安装结果检查
+
+确认以下目录存在：
+
+```text
+$SKILLS_DIR/autotest-check-prd/
+$SKILLS_DIR/autotest-summary-prd/
+$SKILLS_DIR/autotest-generate-cases/
+$SKILLS_DIR/autotest-check-case/
+$SKILLS_DIR/autotest-summary-case/
+$SKILLS_DIR/autotest-generate-script/
+$SKILLS_DIR/autotest-review-script/
+```
+
+### 不同 Agent 的使用方式
+
+如果 Agent 支持 slash command，可直接使用：
+
+```text
+/autotest-check-prd
+/autotest-summary-prd
+/autotest-generate-cases
+/autotest-check-case
+/autotest-summary-case
+/autotest-generate-script
+/autotest-review-script
+```
+
+如果 Agent 不支持 slash command，可用自然语言明确指定 skill 名称：
+
+```text
+请使用 autotest-check-prd 审查这个 PRD：/path/to/prd.pdf
+```
+
+```text
+请使用 autotest-generate-cases，基于 testcase-workflow/finalized-requirements/ 生成测试用例 Excel。
+```
+
+```text
+请使用 autotest-generate-script，读取 testcase-workflow/script-context/，生成 PageObject 和 pytest 用例。
+```
+
 ## 一、适用范围
 
 适用于以下场景：
@@ -698,4 +843,3 @@ autotest-check-prd -> autotest-summary-prd -> autotest-generate-cases
 -> autotest-check-case -> autotest-summary-case -> autotest-generate-script
 -> autotest-review-script -> 回归候选
 ```
-
